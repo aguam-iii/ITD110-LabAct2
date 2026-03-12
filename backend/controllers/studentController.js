@@ -40,15 +40,15 @@ const getStudent = async (req, res) => {
 // Create student
 const createStudent = async (req, res) => {
     try {
-        const { name, email, course } = req.body;
+        const { name, email, course, birthdate, phone } = req.body;
 
-        if (!name || !email || !course) {
-            return res.status(400).json({ message: 'Name, email, and course are required' });
+        if (!name || !email || !course || !birthdate || !phone) {
+            return res.status(400).json({ message: 'All fields are required' });
         }
 
         const id = uuidv4();
         const now = new Date().toISOString();
-        const student = { id, name, email: email.toLowerCase().trim(), course, createdAt: now, updatedAt: now };
+        const student = { id, name, email: email.toLowerCase().trim(), course, birthdate, phone, createdAt: now, updatedAt: now };
 
         for (const [field, value] of Object.entries(student)) {
             await client.hSet(STUDENT_KEY(id), field, value);
@@ -69,11 +69,13 @@ const updateStudent = async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        const { name, email, course } = req.body;
+        const { name, email, course, birthdate, phone } = req.body;
         const updates = { updatedAt: new Date().toISOString() };
         if (name) updates.name = name;
         if (email) updates.email = email.toLowerCase().trim();
         if (course) updates.course = course;
+        if (birthdate) updates.birthdate = birthdate;
+        if (phone) updates.phone = phone;
 
         for (const [field, value] of Object.entries(updates)) {
             await client.hSet(STUDENT_KEY(req.params.id), field, value);
