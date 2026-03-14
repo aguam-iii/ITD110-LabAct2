@@ -13,9 +13,43 @@ const phoneInput = document.getElementById('phone');
 const tbody = document.getElementById('students-tbody');
 const noStudentsMsg = document.getElementById('no-students');
 
+// Add logs elements (for express middleware function, logger)
+const logsContainer = document.createElement('div');
+logsContainer.id = 'logs-container';
+logsContainer.innerHTML = `
+    <h2>API Request Logs</h2>
+    <div class="logs-controls">
+        <button id="refresh-logs-btn" class="btn-refresh">Refresh Logs</button>
+        <span id="logs-count">Total logs: 0</span>
+    </div>
+    <div class="logs-table-container">
+        <table id="logs-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Method</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Response Time</th>
+                </tr>
+            </thead>
+            <tbody id="logs-tbody">
+            </tbody>
+        </table>
+        <p id="no-logs" class="hidden">No logs available.</p>
+    </div>
+`;
+document.querySelector('.container').insertBefore(logsContainer, document.querySelector('.table-container'));
+
 let isEditing = false;
 
-document.addEventListener('DOMContentLoaded', fetchStudents);
+document.addEventListener('DOMContentLoaded', () => {
+    fetchStudents();
+    fetchLogs();
+});
+
+// Add event listener for refresh logs button
+document.getElementById('refresh-logs-btn').addEventListener('click', fetchLogs);
 
 form.addEventListener('submit', handleSubmit);
 cancelBtn.addEventListener('click', resetForm);
@@ -27,6 +61,17 @@ async function fetchStudents() {
         renderStudents(students);
     } catch (error) {
         console.error('Error fetching students:', error);
+    }
+}
+
+async function fetchLogs() {
+    try {
+        const response = await fetch('http://localhost:3000/api/logs');
+        const data = await response.json();
+        renderLogs(data.logs);
+        document.getElementById('logs-count').textContent = `Total logs: ${data.totalLogs}`;
+    } catch (error) {
+        console.error('Error fetching logs:', error);
     }
 }
 
@@ -54,6 +99,35 @@ function renderStudents(students) {
             </td>
         `;
         tbody.appendChild(row);
+    });
+}
+
+function renderLogs(logs) {
+    const logsTbody = document.getElementById('logs-tbody');
+    const noLogsMsg = document.getElementById('no-logs');
+    
+    logsTbody.innerHTML = '';
+
+    if (logs.length === 0) {
+        noLogsMsg.classList.remove('hidden');
+        return;
+    }
+
+    noLogsMsg.classList.add('hidden');
+
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        const time = new Date(log.timestamp).toLocaleTimeString();
+        const statusClass = log.statusCode >= 400 ? 'status-error' : 'status-success';
+        
+        row.innerHTML = `
+            <td>${time}</td>
+            <td><span class="method-${log.method.toLowerCase()}">${log.method}</span></td>
+            <td>${escapeHtml(log.url)}</td>
+            <td><span class="status-code ${statusClass}">${log.statusCode}</span></td>
+            <td>${log.responseTime}ms</td>
+        `;
+        logsTbody.appendChild(row);
     });
 }
 
@@ -91,6 +165,7 @@ async function handleSubmit(e) {
 
         resetForm();
         fetchStudents();
+        fetchLogs();
     } catch (error) {
         console.error('Error saving student:', error);
     }
@@ -127,6 +202,7 @@ async function deleteStudent(id) {
     try {
         await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
         fetchStudents();
+        fetchLogs();
     } catch (error) {
         console.error('Error deleting student:', error);
     }
