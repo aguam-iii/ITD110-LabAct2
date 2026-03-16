@@ -13,34 +13,6 @@ const phoneInput = document.getElementById('phone');
 const tbody = document.getElementById('students-tbody');
 const noStudentsMsg = document.getElementById('no-students');
 
-// Add logs elements (for express middleware function, logger)
-const logsContainer = document.createElement('div');
-logsContainer.id = 'logs-container';
-logsContainer.innerHTML = `
-    <h2>API Request Logs</h2>
-    <div class="logs-controls">
-        <button id="refresh-logs-btn" class="btn-refresh">Refresh Logs</button>
-        <span id="logs-count">Total logs: 0</span>
-    </div>
-    <div class="logs-table-container">
-        <table id="logs-table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Method</th>
-                    <th>URL</th>
-                    <th>Status</th>
-                    <th>Response Time</th>
-                </tr>
-            </thead>
-            <tbody id="logs-tbody">
-            </tbody>
-        </table>
-        <p id="no-logs" class="hidden">No logs available.</p>
-    </div>
-`;
-document.querySelector('.container').insertBefore(logsContainer, document.querySelector('.table-container'));
-
 let isEditing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
