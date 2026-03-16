@@ -12,16 +12,21 @@ const birthdateInput = document.getElementById('birthdate');
 const phoneInput = document.getElementById('phone');
 const tbody = document.getElementById('students-tbody');
 const noStudentsMsg = document.getElementById('no-students');
+const logsTbody = document.getElementById('logs-tbody');
+const noLogsMsg = document.getElementById('no-logs');
+const logsCountSpan = document.getElementById('logs-count');
 
 let isEditing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchStudents();
     fetchLogs();
+    
+    const refreshLogsBtn = document.getElementById('refresh-logs-btn');
+    if (refreshLogsBtn) {
+        refreshLogsBtn.addEventListener('click', fetchLogs);
+    }
 });
-
-// Add event listener for refresh logs button
-document.getElementById('refresh-logs-btn').addEventListener('click', fetchLogs);
 
 form.addEventListener('submit', handleSubmit);
 cancelBtn.addEventListener('click', resetForm);
@@ -41,7 +46,9 @@ async function fetchLogs() {
         const response = await fetch('http://localhost:3000/api/logs');
         const data = await response.json();
         renderLogs(data.logs);
-        document.getElementById('logs-count').textContent = `Total logs: ${data.totalLogs}`;
+        if (logsCountSpan) {
+            logsCountSpan.textContent = `Total logs: ${data.totalLogs}`;
+        }
     } catch (error) {
         console.error('Error fetching logs:', error);
     }
@@ -75,9 +82,6 @@ function renderStudents(students) {
 }
 
 function renderLogs(logs) {
-    const logsTbody = document.getElementById('logs-tbody');
-    const noLogsMsg = document.getElementById('no-logs');
-    
     logsTbody.innerHTML = '';
 
     if (logs.length === 0) {
@@ -95,18 +99,11 @@ function renderLogs(logs) {
         row.innerHTML = `
             <td>${time}</td>
             <td><span class="method-${log.method.toLowerCase()}">${log.method}</span></td>
-            <td>${escapeHtml(log.url)}</td>
-            <td><span class="status-code ${statusClass}">${log.statusCode}</span></td>
+            <td><span class="${statusClass}">${log.statusCode}</span></td>
             <td>${log.responseTime}ms</td>
         `;
         logsTbody.appendChild(row);
     });
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 async function handleSubmit(e) {
@@ -187,4 +184,11 @@ function resetForm() {
     formTitle.textContent = 'Add New Student';
     submitBtn.textContent = 'Add Student';
     cancelBtn.classList.add('hidden');
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
